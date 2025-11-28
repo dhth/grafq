@@ -1,0 +1,17 @@
+name: audit
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 2 * * 2,6'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - uses: dhth/composite-actions/.github/actions/cargo-deny@main

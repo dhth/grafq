@@ -1,0 +1,4 @@
+ commands
+   help / :h                      show help
+   clear                          clear screen
+   quit / exit / bye / :q         quit

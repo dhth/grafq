@@ -1,0 +1,23 @@
+---
+source: src/view/console.rs
+expression: result
+---
+ ░██████████ ░██████████ ░██     ░██ ░██████████
+ ░██     ░██ ░██         ░██     ░██ ░██     ░██
+ ░██     ░██ ░██         ░██     ░██ ░██████████
+ ░██     ░██ ░██         ░██     ░██ ░██        
+ ░██████████ ░██████████ ░██████████ ░██████████
+         ░██                                    
+ ░██████████                                    
+
+
+ connected to: https://db.cluster-cf0abc1xyzjk.us-east-1.neptune.amazonaws.com:8182
+
+ commands
+   help / :h                      show help
+   clear                          clear screen
+   quit / exit / bye / :q         quit
+
+ keymaps
+   ↑ / k                          scroll up in query history
+   ↓ / j                          scroll down in query history
