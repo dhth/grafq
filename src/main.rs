@@ -72,7 +72,7 @@ async fn main() -> anyhow::Result<()> {
                 std::fs::create_dir_all(parent).with_context(|| {
                     format!(
                         "failed to create directory for gcue's history: {:?}",
-                        history_file_path
+                        parent,
                     )
                 })?;
             }

@@ -50,7 +50,7 @@ pub async fn benchmark_query(
 
     println!(
         "{}",
-        format!("Benchmarking up ({} runs) ...", num_runs.value())
+        format!("Benchmarking ({} runs) ...", num_runs.value())
             .yellow()
             .bold()
     );

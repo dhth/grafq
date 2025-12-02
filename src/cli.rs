@@ -74,7 +74,7 @@ benchmark num warmup runs:  {}"#,
 
                 let query_info = if query.as_str() == "-" {
                     "
-query                       -
+query:                      -
 "
                     .to_string()
                 } else {
@@ -93,7 +93,7 @@ query:
                     r#"
 command:                    query
 benchmark:                  {}{}
-print query                 {}{}"#,
+print query:                {}{}"#,
                     benchmark,
                     benchmark_info.unwrap_or_default(),
                     print_query,

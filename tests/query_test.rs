@@ -54,8 +54,8 @@ fn debug_flag_works_for_defaults() {
 
     command:                    query
     benchmark:                  false
-    print query                 false
-    query                       -
+    print query:                false
+    query:                      -
 
     ----- stderr -----
     ");
@@ -89,7 +89,7 @@ fn debug_flag_works_with_overridden_flags() {
     benchmark:                  true
     benchmark num runs:         10
     benchmark num warmup runs:  5
-    print query                 true
+    print query:                true
     query:
     ---
     MATCH (c: Candidate) RETURN c.id LIMIT 5
