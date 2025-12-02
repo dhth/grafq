@@ -39,6 +39,7 @@ tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 
 [dev-dependencies]
 insta = { version = "1.43.2", features = ["yaml"] }
+insta-cmd = "0.6.0"
 
 [lints.clippy]
 unwrap_used = "deny"

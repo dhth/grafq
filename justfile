@@ -9,7 +9,6 @@ alias fc := fmt-check
 alias i := install
 alias l := lint
 alias lf := lint-fix
-alias r := run
 alias re := review
 alias t := test
 
@@ -46,8 +45,11 @@ lint-fix:
 publish-dry:
     cargo publish --dry-run --allow-dirty
 
-run *FLAGS:
-    cargo run -- run {{FLAGS}}
+console *FLAGS:
+    cargo run -- console {{FLAGS}}
+
+query ARGS *FLAGS:
+    cargo run -- query {{ARGS}} {{FLAGS}}
 
 review *FLAGS:
     cargo insta test --review {{FLAGS}}
