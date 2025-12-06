@@ -77,7 +77,7 @@ async fn main() -> anyhow::Result<()> {
                 })?;
             }
 
-            let console = Console::new(db_client, history_file_path);
+            let mut console = Console::new(db_client, history_file_path);
             console.run_loop().await?;
         }
         cli::GraphQCommand::Query {

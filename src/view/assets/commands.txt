@@ -1,4 +1,7 @@
  commands
-   help / :h                      show help
    clear                          clear screen
+   format                         csv/json
+   help / :h                      show help
+   output                         <PATH>
    quit / exit / bye / :q         quit
+   write                          on/off

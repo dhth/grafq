@@ -46,11 +46,8 @@ lint-fix:
 publish-dry:
     cargo publish --dry-run --allow-dirty
 
-run ARGS *FLAGS:
-    cargo run -- {{ARGS}} {{FLAGS}}
-
-console *FLAGS:
-    cargo run -- console {{FLAGS}}
+run CMD="console" *FLAGS:
+    cargo run -- {{CMD}} {{FLAGS}}
 
 query ARGS *FLAGS:
     cargo run -- query {{ARGS}} {{FLAGS}}
