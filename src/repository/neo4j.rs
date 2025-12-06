@@ -35,9 +35,14 @@ impl Neo4jClient {
         self.db_uri.clone()
     }
 
-    pub(super) async fn execute_query(&self, query: &str) -> anyhow::Result<Value> {
-        let mut result = self.inner.execute(neo4j_query(query)).await?;
-        let mut rows = Vec::new();
+    pub(super) async fn execute_query(&self, query: &str) -> anyhow::Result<Vec<Value>> {
+        let mut result = self
+            .inner
+            .execute(neo4j_query(query))
+            .await
+            .context("couldn't execute query")?;
+
+        let mut results = Vec::new();
 
         while let Some(row) = result
             .next()
@@ -45,9 +50,9 @@ impl Neo4jClient {
             .context("couldn't get row from results")?
         {
             let row_value = row.to::<Value>().context("couldn't parse row as value")?;
-            rows.push(row_value);
+            results.push(row_value);
         }
 
-        Ok(Value::Array(rows))
+        Ok(results)
     }
 }

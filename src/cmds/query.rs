@@ -5,13 +5,10 @@ use colored::Colorize;
 use serde_json::Value;
 use std::time::Instant;
 
-pub async fn execute_query(db_client: &DbClient, query: &str) -> anyhow::Result<Value> {
-    let value = db_client
-        .execute_query(query)
-        .await
-        .context("couldn't execute query")?;
+pub async fn execute_query(db_client: &DbClient, query: &str) -> anyhow::Result<Vec<Value>> {
+    let results = db_client.execute_query(query).await?;
 
-    Ok(value)
+    Ok(results)
 }
 
 pub async fn benchmark_query(
@@ -33,7 +30,7 @@ pub async fn benchmark_query(
         db_client
             .execute_query(query)
             .await
-            .with_context(|| format!("couldn't execute query for warmup run #{}", i + 1))?;
+            .with_context(|| format!("couldn't get results for warmup run #{}", i + 1))?;
         let elapsed = start.elapsed().as_millis();
         println!("run {:03}:      {}", i + 1, format!("{}ms", elapsed).cyan(),);
     }

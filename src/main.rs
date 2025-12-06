@@ -86,10 +86,14 @@ async fn main() -> anyhow::Result<()> {
                     .await?;
             } else {
                 let results = cmds::execute_query(&db_client, &query).await?;
+                if results.is_empty() {
+                    println!("No results");
+                    return Ok(());
+                }
 
                 if write_results {
                     let results_file_path = crate::service::write_results(
-                        results,
+                        &results,
                         &results_directory,
                         &results_format,
                         Utc::now(),
@@ -97,10 +101,9 @@ async fn main() -> anyhow::Result<()> {
                     .await
                     .context("couldn't write results")?;
                     println!("Wrote results to {}", results_file_path.to_string_lossy());
-                } else if let Some(results_str) = get_results(&results) {
-                    println!("{}", results_str);
                 } else {
-                    println!("no results");
+                    let results_str = get_results(&results);
+                    println!("{}", results_str);
                 }
             }
         }

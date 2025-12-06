@@ -6,7 +6,7 @@ pub use neptune::NeptuneClient;
 use serde_json::Value;
 
 pub trait QueryExecutor {
-    async fn execute_query(&self, query: &str) -> anyhow::Result<Value>;
+    async fn execute_query(&self, query: &str) -> anyhow::Result<Vec<Value>>;
     fn db_uri(&self) -> String;
 }
 
@@ -16,7 +16,7 @@ pub enum DbClient {
 }
 
 impl QueryExecutor for DbClient {
-    async fn execute_query(&self, query: &str) -> anyhow::Result<Value> {
+    async fn execute_query(&self, query: &str) -> anyhow::Result<Vec<Value>> {
         match self {
             DbClient::Neptune(c) => c.execute_query(query).await,
             DbClient::Neo4j(c) => c.execute_query(query).await,

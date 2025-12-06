@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use tokio::io::AsyncWriteExt;
 
 pub async fn write_results<P>(
-    results: Value,
+    results: &[Value],
     results_directory: P,
     format: &OutputFormat,
     reference_time: DateTime<Utc>,
@@ -48,12 +48,12 @@ where
     Ok(output_file_path)
 }
 
-async fn write_json<W>(results: Value, mut writer: W) -> anyhow::Result<()>
+async fn write_json<W>(results: &[Value], mut writer: W) -> anyhow::Result<()>
 where
     W: tokio::io::AsyncWrite + Unpin,
 {
     let json_string =
-        serde_json::to_string_pretty(&results).context("couldn't serialize results to JSON")?;
+        serde_json::to_string_pretty(results).context("couldn't serialize results to JSON")?;
     writer
         .write_all(json_string.as_bytes())
         .await

@@ -141,33 +141,38 @@ impl<D: QueryExecutor> Console<D> {
                     if let Err(e) = editor.add_history_entry(q) {
                         println!("Error: {e}");
                     }
-                    let results = self
-                        .db_client
-                        .execute_query(q)
-                        .await
-                        .context("couldn't execute query")?;
 
-                    if self.config.write_results {
-                        match crate::service::write_results(
-                            results,
-                            &self.config.results_directory,
-                            &self.config.results_format,
-                            Utc::now(),
-                        )
-                        .await
-                        .context("couldn't write results")
-                        {
-                            Ok(p) => {
-                                print_info(format!("wrote results to {}", p.to_string_lossy()));
-                            }
-                            Err(e) => {
-                                print_error(format!("Error: couldn't write results: {}", e));
+                    match self.db_client.execute_query(q).await {
+                        Ok(results) if results.is_empty() => {
+                            println!("\nNo results\n");
+                        }
+                        Ok(results) => {
+                            if self.config.write_results {
+                                match crate::service::write_results(
+                                    &results,
+                                    &self.config.results_directory,
+                                    &self.config.results_format,
+                                    Utc::now(),
+                                )
+                                .await
+                                .context("couldn't write results")
+                                {
+                                    Ok(p) => {
+                                        print_info(format!(
+                                            "wrote results to {}",
+                                            p.to_string_lossy()
+                                        ));
+                                    }
+                                    Err(e) => {
+                                        print_error(format!("Error: {}", e));
+                                    }
+                                }
+                            } else {
+                                let results_str = get_results(&results);
+                                println!("\n{}\n", results_str);
                             }
                         }
-                    } else if let Some(results_str) = get_results(&results) {
-                        println!("\n{}\n", results_str);
-                    } else {
-                        println!("\n {}\n", "no results".blue());
+                        Err(e) => print_error(format!("Error: couldn't get results: {:#}", e)),
                     }
                 }
             }
