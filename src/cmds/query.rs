@@ -1,23 +1,13 @@
-use crate::domain::BenchmarkNumRuns;
+use crate::domain::{BenchmarkNumRuns, QueryResults};
 use crate::repository::{DbClient, QueryExecutor};
-use crate::view::get_results;
 use anyhow::Context;
 use colored::Colorize;
 use std::time::Instant;
 
-pub async fn execute_query(db_client: &DbClient, query: &str) -> anyhow::Result<()> {
-    let value = db_client
-        .execute_query(query)
-        .await
-        .context("couldn't execute query")?;
+pub async fn execute_query(db_client: &DbClient, query: &str) -> anyhow::Result<QueryResults> {
+    let results = db_client.execute_query(query).await?;
 
-    if let Some(results_str) = get_results(&value) {
-        println!("{}", results_str);
-    } else {
-        println!("no results");
-    }
-
-    Ok(())
+    Ok(results)
 }
 
 pub async fn benchmark_query(
@@ -39,7 +29,7 @@ pub async fn benchmark_query(
         db_client
             .execute_query(query)
             .await
-            .with_context(|| format!("couldn't execute query for warmup run #{}", i + 1))?;
+            .with_context(|| format!("couldn't get results for warmup run #{}", i + 1))?;
         let elapsed = start.elapsed().as_millis();
         println!("run {:03}:      {}", i + 1, format!("{}ms", elapsed).cyan(),);
     }

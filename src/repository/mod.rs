@@ -3,10 +3,11 @@ mod neptune;
 
 pub use neo4j::{Neo4jClient, Neo4jConfig};
 pub use neptune::NeptuneClient;
-use serde_json::Value;
+
+use crate::domain::QueryResults;
 
 pub trait QueryExecutor {
-    async fn execute_query(&self, query: &str) -> anyhow::Result<Value>;
+    async fn execute_query(&self, query: &str) -> anyhow::Result<QueryResults>;
     fn db_uri(&self) -> String;
 }
 
@@ -16,7 +17,7 @@ pub enum DbClient {
 }
 
 impl QueryExecutor for DbClient {
-    async fn execute_query(&self, query: &str) -> anyhow::Result<Value> {
+    async fn execute_query(&self, query: &str) -> anyhow::Result<QueryResults> {
         match self {
             DbClient::Neptune(c) => c.execute_query(query).await,
             DbClient::Neo4j(c) => c.execute_query(query).await,

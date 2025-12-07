@@ -1,0 +1,9 @@
+---
+source: src/service/output.rs
+expression: result
+---
+compiled,creators,features,language,year
+true,"[""Graydon Hoare""]","{""garbage_collection"":false,""static_typing"":true}",Rust,2010
+true,"[""Robert Griesemer"",""Rob Pike"",""Ken Thompson"",null]","{""garbage_collection"":true,""static_typing"":true}",Go,2009
+false,,"{""garbage_collection"":true,""static_typing"":null}",Python,1991
+true,"[""Louis Pilfold""]",,Gleam,2016

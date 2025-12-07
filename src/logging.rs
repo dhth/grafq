@@ -17,7 +17,7 @@ pub fn setup(xdg: &Xdg) -> anyhow::Result<()> {
         .create(true)
         .append(true)
         .open(&log_file_path)
-        .context("failed to open log file")?;
+        .context("couldn't open log file")?;
 
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::from_env(LOG_ENV_VAR))

@@ -1,0 +1,21 @@
+---
+source: src/service/output.rs
+expression: result
+---
+[
+  {
+    "creator": "Graydon Hoare",
+    "language": "Rust",
+    "year": 2010
+  },
+  {
+    "creator": "Guido van Rossum",
+    "language": "Python",
+    "year": 1991
+  },
+  {
+    "creator": "Rob Pike",
+    "language": "Go",
+    "year": 2009
+  }
+]

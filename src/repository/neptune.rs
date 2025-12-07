@@ -4,6 +4,8 @@ use aws_sdk_neptunedata::Client as NeptuneDataClient;
 use aws_smithy_types::{Document, Number};
 use serde_json::{Map, Value};
 
+use crate::domain::QueryResults;
+
 pub struct NeptuneClient {
     inner: NeptuneDataClient,
     db_uri: String,
@@ -26,7 +28,7 @@ impl NeptuneClient {
         self.db_uri.clone()
     }
 
-    pub(super) async fn execute_query(&self, query: &str) -> anyhow::Result<Value> {
+    pub(super) async fn execute_query(&self, query: &str) -> anyhow::Result<QueryResults> {
         let output = self
             .inner
             .execute_open_cypher_query()
@@ -37,7 +39,14 @@ impl NeptuneClient {
 
         let document = output.results();
 
-        Ok(document_to_value(document))
+        let result_value = document_to_value(document);
+
+        let results = match result_value {
+            Value::Array(arr) => arr,
+            _ => anyhow::bail!("unexpected response received, was expecting an array"),
+        };
+
+        Ok(results.into())
     }
 }
 

@@ -35,7 +35,7 @@ fmt-check:
     cargo fmt --all -- --check
 
 install:
-    cargo install --path . --profile dist
+    cargo install --path .
 
 lint:
     cargo clippy --all-targets
@@ -46,11 +46,8 @@ lint-fix:
 publish-dry:
     cargo publish --dry-run --allow-dirty
 
-run ARGS *FLAGS:
-    cargo run -- {{ARGS}} {{FLAGS}}
-
-console *FLAGS:
-    cargo run -- console {{FLAGS}}
+run CMD="console" *FLAGS:
+    cargo run -- {{CMD}} {{FLAGS}}
 
 query ARGS *FLAGS:
     cargo run -- query {{ARGS}} {{FLAGS}}

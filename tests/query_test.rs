@@ -3,6 +3,8 @@ mod common;
 use common::Fixture;
 use insta_cmd::assert_cmd_snapshot;
 
+const QUERY: &str = "MATCH (c: Candidate) RETURN c.id LIMIT 5";
+
 //-------------//
 //  SUCCESSES  //
 //-------------//
@@ -32,6 +34,9 @@ fn shows_help() {
           --debug                           Output debug information without doing anything
       -W, --bench-num-warmup-runs <NUMBER>  Number of benchmark warmup runs [default: 3]
       -p, --print-query                     Print query
+      -w, --write-results                   Write results to filesystem
+      -d, --results-dir <DIRECTORY>         Directory to write results in [default: .gcue]
+      -f, --results-format <FORMAT>         Format to write results in [default: csv] [possible values: csv, json]
       -h, --help                            Print help
 
     ----- stderr -----
@@ -55,6 +60,8 @@ fn debug_flag_works_for_defaults() {
     command:                    query
     benchmark:                  false
     print query:                false
+    write results:              false
+
     query:                      -
 
     ----- stderr -----
@@ -74,7 +81,7 @@ fn debug_flag_works_with_overridden_flags() {
         "5",
         "--print-query",
         "--debug",
-        "MATCH (c: Candidate) RETURN c.id LIMIT 5",
+        QUERY,
     ]);
 
     // WHEN
@@ -90,6 +97,47 @@ fn debug_flag_works_with_overridden_flags() {
     benchmark num runs:         10
     benchmark num warmup runs:  5
     print query:                true
+    write results:              false
+
+    query:
+    ---
+    MATCH (c: Candidate) RETURN c.id LIMIT 5
+    ---
+
+    ----- stderr -----
+    ");
+}
+
+#[test]
+fn debug_flag_works_for_write_results_flags() {
+    // GIVEN
+    let fx = Fixture::new();
+    let mut cmd = fx.cmd([
+        "query",
+        "--write-results",
+        "--results-dir",
+        "path/to/results/dir",
+        "--results-format",
+        "json",
+        "--debug",
+        QUERY,
+    ]);
+
+    // WHEN
+    // THEN
+    assert_cmd_snapshot!(cmd, @r"
+    success: true
+    exit_code: 0
+    ----- stdout -----
+    DEBUG INFO
+
+    command:                    query
+    benchmark:                  false
+    print query:                false
+    write results:              true
+    results directory:          path/to/results/dir
+    results format:             json
+
     query:
     ---
     MATCH (c: Candidate) RETURN c.id LIMIT 5
@@ -107,7 +155,7 @@ fn debug_flag_works_with_overridden_flags() {
 fn fails_if_provided_with_incorrect_benchmark_num_runs() {
     // GIVEN
     let fx = Fixture::new();
-    let mut cmd = fx.cmd(["query", "--bench", "--bench-num-runs", "0"]);
+    let mut cmd = fx.cmd(["query", "--bench", "--bench-num-runs", "0", QUERY]);
 
     // WHEN
     // THEN
@@ -118,6 +166,51 @@ fn fails_if_provided_with_incorrect_benchmark_num_runs() {
 
     ----- stderr -----
     error: invalid value '0' for '--bench-num-runs <NUMBER>': needs to be greater than 0
+
+    For more information, try '--help'.
+    ");
+}
+
+#[test]
+fn fails_if_both_benchmark_and_write_flags_are_provided() {
+    // GIVEN
+    let fx = Fixture::new();
+    let mut cmd = fx.cmd(["query", "--bench", "--write-results", QUERY]);
+
+    // WHEN
+    // THEN
+    assert_cmd_snapshot!(cmd, @r"
+    success: false
+    exit_code: 1
+    ----- stdout -----
+
+    ----- stderr -----
+    Error: cannot benchmark and write results at the same time
+    ");
+}
+
+#[test]
+fn fails_if_incorrect_results_format_provided() {
+    // GIVEN
+    let fx = Fixture::new();
+    let mut cmd = fx.cmd([
+        "query",
+        "--write-results",
+        "--results-format",
+        "unknown",
+        QUERY,
+    ]);
+
+    // WHEN
+    // THEN
+    assert_cmd_snapshot!(cmd, @r"
+    success: false
+    exit_code: 2
+    ----- stdout -----
+
+    ----- stderr -----
+    error: invalid value 'unknown' for '--results-format <FORMAT>'
+      [possible values: csv, json]
 
     For more information, try '--help'.
     ");
