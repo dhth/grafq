@@ -80,8 +80,7 @@ impl TryFrom<&str> for CustomPager {
             anyhow::bail!("command is empty");
         }
 
-        let parts = shlex::split(pager_cmd)
-            .ok_or(anyhow::anyhow!("couldn't parse value into a command"))?;
+        let parts = shlex::split(pager_cmd).ok_or(anyhow::anyhow!("couldn't parse command"))?;
 
         if parts.is_empty() {
             anyhow::bail!("command is empty");
@@ -98,6 +97,7 @@ impl TryFrom<&str> for CustomPager {
 mod tests {
     use super::*;
     use insta::assert_debug_snapshot;
+    use insta::assert_snapshot;
 
     //-------------//
     //  SUCCESSES  //
@@ -150,12 +150,25 @@ mod tests {
     //------------//
 
     #[test]
-    fn custom_pager_fails_if_empty_pager_provided() {
+    fn custom_pager_fails_to_parse_empty_pager_command() {
         // GIVEN
         // WHEN
         let result = CustomPager::try_from("  ").expect_err("result should've been an error");
 
         // THEN
-        assert_debug_snapshot!(result, @r#""command is empty""#);
+        assert_snapshot!(result, @"command is empty");
+    }
+
+    #[test]
+    fn custom_pager_fails_to_parse_malformed_pager_command() {
+        // GIVEN
+        let pager_cmd = "bat --paging 'unterminated";
+
+        // WHEN
+        let result = CustomPager::try_from(pager_cmd).expect_err("result should've been an error");
+
+        // THEN
+        // assert_debug_snapshot!(result, @r#""couldn't parse value into a command""#);
+        assert_snapshot!(result, @"couldn't parse command");
     }
 }
