@@ -1,3 +1,5 @@
-mod output;
+mod page;
+mod write;
 
-pub use output::*;
+pub use page::*;
+pub use write::*;

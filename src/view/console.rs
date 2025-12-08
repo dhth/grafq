@@ -1,7 +1,8 @@
 use super::get_results;
 use crate::config::DEFAULT_RESULTS_DIR;
-use crate::domain::{OutputFormat, QueryResults};
+use crate::domain::{OutputFormat, Pager, QueryResults};
 use crate::repository::QueryExecutor;
+use crate::service::{page_results, write_results};
 use anyhow::Context;
 use chrono::Utc;
 use colored::Colorize;
@@ -14,6 +15,7 @@ const COMMANDS: &str = include_str!("assets/commands.txt");
 const KEYMAPS: &str = include_str!("assets/keymaps.txt");
 
 pub struct ConsoleConfig {
+    pub page_results: bool,
     pub write_results: bool,
     pub results_directory: PathBuf,
     pub results_format: OutputFormat,
@@ -23,6 +25,7 @@ pub struct Console<D: QueryExecutor> {
     db_client: D,
     history_file_path: PathBuf,
     config: ConsoleConfig,
+    pager: Option<Pager>,
 }
 
 #[allow(unused)]
@@ -33,11 +36,17 @@ enum ConsoleColor {
 }
 
 impl<D: QueryExecutor> Console<D> {
-    pub fn new(db_client: D, history_file_path: PathBuf, config: ConsoleConfig) -> Self {
+    pub fn new(
+        db_client: D,
+        history_file_path: PathBuf,
+        config: ConsoleConfig,
+        pager: Option<Pager>,
+    ) -> Self {
         Self {
             db_client,
             history_file_path,
             config,
+            pager,
         }
     }
 
@@ -74,6 +83,30 @@ impl<D: QueryExecutor> Console<D> {
                         true,
                     );
                 }
+                cmd if cmd.starts_with("page") => match cmd.split_once(" ") {
+                    Some((_, "on")) => {
+                        if self.pager.is_none() {
+                            match crate::utils::get_pager() {
+                                Ok(p) => {
+                                    self.pager = Some(p);
+                                    self.config.page_results = true;
+                                    print_info("paging results turned ON");
+                                }
+                                Err(e) => {
+                                    print_error(format!("Error: couldn't turn on pager: {:#}", e));
+                                }
+                            }
+                        } else if !self.config.page_results {
+                            self.config.page_results = true;
+                            print_info("paging results turned ON");
+                        }
+                    }
+                    Some((_, "off")) => {
+                        self.config.page_results = false;
+                        print_info("paging results turned OFF");
+                    }
+                    _ => print_error("Usage: page on/off"),
+                },
                 cmd if cmd.starts_with("format") => match cmd.split_once(" ") {
                     Some((_, arg)) => match OutputFormat::from_str(arg) {
                         Ok(f) => {
@@ -129,22 +162,61 @@ impl<D: QueryExecutor> Console<D> {
                         }
                         Ok(QueryResults::NonEmpty(results)) => {
                             if self.config.write_results {
-                                match crate::service::write_results(
+                                match write_results(
                                     &results,
                                     &self.config.results_directory,
                                     &self.config.results_format,
                                     Utc::now(),
-                                )
-                                .context("couldn't write results")
-                                {
+                                ) {
                                     Ok(p) => {
                                         print_info(format!(
                                             "wrote results to {}",
                                             p.to_string_lossy()
                                         ));
+
+                                        if self.config.page_results
+                                            && let Some(pager) = &self.pager
+                                            && let Err(e) = page_results(&p, pager)
+                                        {
+                                            print_error(format!(
+                                                "Error: couldn't display results via pager: {:#}",
+                                                e
+                                            ));
+                                        }
                                     }
                                     Err(e) => {
-                                        print_error(format!("Error: {}", e));
+                                        print_error(format!(
+                                            "Error: couldn't write results: {:#}",
+                                            e
+                                        ));
+                                    }
+                                }
+                            } else if self.config.page_results
+                                && let Some(pager) = &self.pager
+                            {
+                                let temp_results_directory = tempfile::tempdir().context(
+                                    "couldn't create temporary directory for paging results",
+                                )?;
+
+                                match write_results(
+                                    &results,
+                                    &temp_results_directory,
+                                    &self.config.results_format,
+                                    Utc::now(),
+                                ) {
+                                    Ok(p) => {
+                                        if let Err(e) = page_results(&p, pager) {
+                                            print_error(format!(
+                                                "Error: couldn't display results via pager: {:#}",
+                                                e
+                                            ));
+                                        }
+                                    }
+                                    Err(e) => {
+                                        print_error(format!(
+                                            "Error: couldn't write results to temporary directory: {:#}",
+                                            e
+                                        ));
                                     }
                                 }
                             } else {
@@ -183,12 +255,14 @@ fn print_banner(mut writer: impl Write, color: bool) {
 fn print_help(mut writer: impl Write, db_uri: &str, config: &ConsoleConfig, color: bool) {
     let config_help = format!(
         " config
+   page results                   {}
+   write results to filesystem    {}
    output format                  {}
-   output path                    {}
-   write output                   {}",
+   output path                    {}",
+        if config.page_results { "ON" } else { "OFF" },
+        if config.write_results { "ON" } else { "OFF" },
         config.results_format,
         config.results_directory.to_string_lossy(),
-        if config.write_results { "ON" } else { "OFF" }
     );
 
     let help = if color {
@@ -231,6 +305,7 @@ mod tests {
         // GIVEN
         let mut buf = Vec::new();
         let console_config = ConsoleConfig {
+            page_results: false,
             results_format: OutputFormat::Csv,
             results_directory: PathBuf::new().join(DEFAULT_RESULTS_DIR),
             write_results: false,

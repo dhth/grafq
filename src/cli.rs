@@ -18,6 +18,9 @@ pub enum GraphQCommand {
     /// Open gcue's console
     #[command()]
     Console {
+        /// Display results via a pager ("less", by default, can be overridden by $GCUE_PAGER)
+        #[arg(short = 'p', long = "page-results")]
+        page_results: bool,
         /// Write results to filesystem
         #[arg(short = 'w', long = "write-results")]
         write_results: bool,
@@ -34,13 +37,16 @@ pub enum GraphQCommand {
             short = 'f',
             long = "results-format",
             value_name = "FORMAT",
-            default_value = "csv"
+            default_value = "json"
         )]
         results_format: OutputFormat,
     },
     /// Execute a one-off query
     #[command()]
     Query {
+        /// Display results via a pager ("less", by default, can be overridden by $GCUE_PAGER)
+        #[arg(short = 'p', long = "page-results")]
+        page_results: bool,
         /// Cypher query to execute
         #[arg()]
         query: String,
@@ -64,7 +70,7 @@ pub enum GraphQCommand {
         )]
         bench_num_warmup_runs: u16,
         /// Print query
-        #[arg(short = 'p', long = "print-query")]
+        #[arg(short = 'P', long = "print-query")]
         print_query: bool,
         /// Write results to filesystem
         #[arg(short = 'w', long = "write-results")]
@@ -82,7 +88,7 @@ pub enum GraphQCommand {
             short = 'f',
             long = "results-format",
             value_name = "FORMAT",
-            default_value = "csv"
+            default_value = "json"
         )]
         results_format: OutputFormat,
     },
@@ -92,21 +98,25 @@ impl std::fmt::Display for Args {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let output = match &self.command {
             GraphQCommand::Console {
+                page_results,
                 write_results,
                 results_directory,
                 results_format,
             } => format!(
                 "
 command:                    console
+display results via pager:  {}
 write results:              {}
 results directory:          {}
 results format:             {}
 ",
+                page_results,
                 write_results,
                 results_directory.to_string_lossy(),
                 results_format
             ),
             GraphQCommand::Query {
+                page_results,
                 query,
                 benchmark,
                 bench_num_runs,
@@ -163,8 +173,10 @@ write results:              false
                 format!(
                     r#"
 command:                    query
+display results via pager:  {}
 benchmark:                  {}{}
 print query:                {}{}{}"#,
+                    page_results,
                     benchmark,
                     benchmark_info.unwrap_or_default(),
                     print_query,

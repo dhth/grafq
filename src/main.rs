@@ -5,9 +5,9 @@ mod domain;
 mod logging;
 mod repository;
 mod service;
+mod utils;
 mod view;
 
-use crate::view::{ConsoleConfig, get_results};
 use anyhow::Context;
 use aws_config::BehaviorVersion;
 use aws_sdk_neptunedata::config::ProvideCredentials;
@@ -19,6 +19,7 @@ use etcetera::BaseStrategy;
 use repository::{DbClient, Neo4jClient, Neo4jConfig, NeptuneClient};
 use std::io::Read;
 use view::Console;
+use view::{ConsoleConfig, get_results};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -33,6 +34,7 @@ async fn main() -> anyhow::Result<()> {
 
     match args.command {
         cli::GraphQCommand::Console {
+            page_results,
             write_results,
             results_directory,
             results_format,
@@ -47,15 +49,24 @@ async fn main() -> anyhow::Result<()> {
             }
 
             let console_config = ConsoleConfig {
+                page_results,
                 write_results,
                 results_directory,
                 results_format,
             };
-            let mut console = Console::new(db_client, history_file_path, console_config);
+
+            let pager = if page_results {
+                Some(utils::get_pager()?)
+            } else {
+                None
+            };
+
+            let mut console = Console::new(db_client, history_file_path, console_config, pager);
             console.run_loop().await?;
         }
         cli::GraphQCommand::Query {
             query,
+            page_results,
             benchmark,
             bench_num_runs,
             bench_num_warmup_runs,
@@ -67,6 +78,12 @@ async fn main() -> anyhow::Result<()> {
             if benchmark && write_results {
                 anyhow::bail!("cannot benchmark and write results at the same time");
             }
+
+            let pager = if page_results {
+                Some(utils::get_pager()?)
+            } else {
+                None
+            };
 
             let db_client = get_db_client().await?;
 
@@ -111,6 +128,22 @@ async fn main() -> anyhow::Result<()> {
                     )
                     .context("couldn't write results")?;
                     println!("Wrote results to {}", results_file_path.to_string_lossy());
+
+                    if let Some(pager) = pager {
+                        service::page_results(&results_file_path, &pager)?;
+                    }
+                } else if let Some(pager) = pager {
+                    let temp_results_directory = tempfile::tempdir()
+                        .context("couldn't create temporary directory for paging results")?;
+                    let results_file_path = crate::service::write_results(
+                        &results,
+                        &temp_results_directory,
+                        &results_format,
+                        Utc::now(),
+                    )
+                    .context("couldn't write results to temporary location")?;
+
+                    service::page_results(&results_file_path, &pager)?;
                 } else {
                     let results_str = get_results(&results);
                     println!("{}", results_str);
@@ -123,7 +156,7 @@ async fn main() -> anyhow::Result<()> {
 }
 
 async fn get_db_client() -> anyhow::Result<DbClient> {
-    let db_uri = get_mandatory_env_var("DB_URI")?;
+    let db_uri = utils::get_mandatory_env_var("DB_URI")?;
 
     let db_client = match db_uri.split_once("://") {
         Some(("http", _)) | Some(("https", _)) => {
@@ -139,9 +172,9 @@ async fn get_db_client() -> anyhow::Result<DbClient> {
             DbClient::Neptune(neptune_client)
         }
         Some(("bolt", _)) => {
-            let user = get_mandatory_env_var("NEO4J_USER")?;
-            let password = get_mandatory_env_var("NEO4J_PASSWORD")?;
-            let database_name = get_mandatory_env_var("NEO4J_DB")?;
+            let user = utils::get_mandatory_env_var("NEO4J_USER")?;
+            let password = utils::get_mandatory_env_var("NEO4J_PASSWORD")?;
+            let database_name = utils::get_mandatory_env_var("NEO4J_DB")?;
 
             let config = Neo4jConfig {
                 db_uri,
@@ -162,18 +195,4 @@ async fn get_db_client() -> anyhow::Result<DbClient> {
     };
 
     Ok(db_client)
-}
-
-fn get_mandatory_env_var(key: &str) -> anyhow::Result<String> {
-    get_env_var(key)?.context(format!("{} is not set", key))
-}
-
-pub fn get_env_var(key: &str) -> anyhow::Result<Option<String>> {
-    match std::env::var(key) {
-        Ok(v) => Ok(Some(v)),
-        Err(e) => match e {
-            std::env::VarError::NotPresent => Ok(None),
-            std::env::VarError::NotUnicode(_) => anyhow::bail!("{} is not valid unicode", key),
-        },
-    }
 }

@@ -3,5 +3,6 @@
    format                         csv/json
    help / :h                      show help
    output                         <PATH> / reset
+   page                           on/off
    quit / exit / bye / :q         quit
    write                          on/off

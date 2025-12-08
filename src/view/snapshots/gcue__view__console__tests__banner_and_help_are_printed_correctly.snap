@@ -15,15 +15,17 @@ expression: result
  connected to: https://db.cluster-cf0abc1xyzjk.us-east-1.neptune.amazonaws.com:8182
 
  config
+   page results                   OFF
+   write results to filesystem    OFF
    output format                  csv
    output path                    .gcue
-   write output                   OFF
 
  commands
    clear                          clear screen
    format                         csv/json
    help / :h                      show help
    output                         <PATH> / reset
+   page                           on/off
    quit / exit / bye / :q         quit
    write                          on/off
 

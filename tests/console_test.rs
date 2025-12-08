@@ -15,7 +15,7 @@ fn shows_help() {
 
     // WHEN
     // THEN
-    assert_cmd_snapshot!(cmd, @r"
+    assert_cmd_snapshot!(cmd, @r#"
     success: true
     exit_code: 0
     ----- stdout -----
@@ -24,14 +24,15 @@ fn shows_help() {
     Usage: gcue console [OPTIONS]
 
     Options:
+      -p, --page-results             Display results via a pager ("less", by default, can be overridden by $GCUE_PAGER)
       -w, --write-results            Write results to filesystem
       -d, --results-dir <DIRECTORY>  Directory to write results in [default: .gcue]
           --debug                    Output debug information without doing anything
-      -f, --results-format <FORMAT>  Format to write results in [default: csv] [possible values: csv, json]
+      -f, --results-format <FORMAT>  Format to write results in [default: json] [possible values: csv, json]
       -h, --help                     Print help
 
     ----- stderr -----
-    ");
+    "#);
 }
 
 #[test]
@@ -49,9 +50,10 @@ fn debug_flag_works_for_defaults() {
     DEBUG INFO
 
     command:                    console
+    display results via pager:  false
     write results:              false
     results directory:          .gcue
-    results format:             csv
+    results format:             json
 
     ----- stderr -----
     ");
@@ -80,6 +82,7 @@ fn debug_flag_works_for_overridden_flags() {
     DEBUG INFO
 
     command:                    console
+    display results via pager:  false
     write results:              true
     results directory:          path/to/results/dir
     results format:             json

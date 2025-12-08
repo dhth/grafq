@@ -17,7 +17,7 @@ fn shows_help() {
 
     // WHEN
     // THEN
-    assert_cmd_snapshot!(cmd, @r"
+    assert_cmd_snapshot!(cmd, @r#"
     success: true
     exit_code: 0
     ----- stdout -----
@@ -29,18 +29,19 @@ fn shows_help() {
       <QUERY>  Cypher query to execute
 
     Options:
+      -p, --page-results                    Display results via a pager ("less", by default, can be overridden by $GCUE_PAGER)
       -b, --bench                           Whether to benchmark the query
-      -n, --bench-num-runs <NUMBER>         Number of benchmark runs [default: 5]
           --debug                           Output debug information without doing anything
+      -n, --bench-num-runs <NUMBER>         Number of benchmark runs [default: 5]
       -W, --bench-num-warmup-runs <NUMBER>  Number of benchmark warmup runs [default: 3]
-      -p, --print-query                     Print query
+      -P, --print-query                     Print query
       -w, --write-results                   Write results to filesystem
       -d, --results-dir <DIRECTORY>         Directory to write results in [default: .gcue]
-      -f, --results-format <FORMAT>         Format to write results in [default: csv] [possible values: csv, json]
+      -f, --results-format <FORMAT>         Format to write results in [default: json] [possible values: csv, json]
       -h, --help                            Print help
 
     ----- stderr -----
-    ");
+    "#);
 }
 
 #[test]
@@ -58,6 +59,7 @@ fn debug_flag_works_for_defaults() {
     DEBUG INFO
 
     command:                    query
+    display results via pager:  false
     benchmark:                  false
     print query:                false
     write results:              false
@@ -93,6 +95,7 @@ fn debug_flag_works_with_overridden_flags() {
     DEBUG INFO
 
     command:                    query
+    display results via pager:  false
     benchmark:                  true
     benchmark num runs:         10
     benchmark num warmup runs:  5
@@ -132,6 +135,7 @@ fn debug_flag_works_for_write_results_flags() {
     DEBUG INFO
 
     command:                    query
+    display results via pager:  false
     benchmark:                  false
     print query:                false
     write results:              true
