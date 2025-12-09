@@ -6,6 +6,7 @@ use crate::service::{page_results, write_results};
 use anyhow::Context;
 use chrono::Utc;
 use colored::Colorize;
+use rustyline::error::ReadlineError;
 use std::io::Write;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -15,6 +16,7 @@ use tokio::time::Instant;
 const BANNER: &str = include_str!("assets/logo.txt");
 const COMMANDS: &str = include_str!("assets/commands.txt");
 const KEYMAPS: &str = include_str!("assets/keymaps.txt");
+const CTRL_C_QUIT_THRESHOLD_MILLIS: u64 = 1000;
 
 pub struct ConsoleConfig {
     pub page_results: bool,
@@ -28,6 +30,7 @@ pub struct Console<D: QueryExecutor> {
     history_file_path: PathBuf,
     config: ConsoleConfig,
     pager: Option<Pager>,
+    last_ctrl_c: Option<Instant>,
 }
 
 #[allow(unused)]
@@ -49,6 +52,7 @@ impl<D: QueryExecutor> Console<D> {
             history_file_path,
             config,
             pager,
+            last_ctrl_c: None,
         }
     }
 
@@ -66,9 +70,30 @@ impl<D: QueryExecutor> Console<D> {
         let _ = editor.load_history(&self.history_file_path);
 
         loop {
-            let query = editor.readline(">> ").context("couldn't read input")?;
+            let user_input = match editor.readline(">> ") {
+                Ok(input) => {
+                    self.last_ctrl_c = None;
+                    input
+                }
+                Err(ReadlineError::Interrupted) => {
+                    if let Some(last_time) = self.last_ctrl_c
+                        && last_time.elapsed() < Duration::from_millis(CTRL_C_QUIT_THRESHOLD_MILLIS)
+                    {
+                        break;
+                    }
+                    print_hint("press ctrl+c again to exit");
+                    self.last_ctrl_c = Some(Instant::now());
+                    continue;
+                }
+                Err(ReadlineError::Eof) => {
+                    break;
+                }
+                Err(e) => {
+                    return Err(e).context("couldn't read input");
+                }
+            };
 
-            match query.trim() {
+            match user_input.trim() {
                 "" => {}
                 "bye" | "exit" | "quit" | ":q" => {
                     break;
@@ -169,7 +194,13 @@ impl<D: QueryExecutor> Console<D> {
 
                     let start = Instant::now();
 
-                    let results = self.db_client.execute_query(&query_to_execute).await;
+                    let results = tokio::select! {
+                        res = self.db_client.execute_query(&query_to_execute) => res,
+                        _ = tokio::signal::ctrl_c() => {
+                            print_hint("\nquery cancelled");
+                            continue;
+                        }
+                    };
                     print_time(Instant::now().saturating_duration_since(start));
 
                     match results {
@@ -262,6 +293,10 @@ fn print_time(duration: Duration) {
 
 fn print_info<S: AsRef<str>>(contents: S) {
     println!("{}", contents.as_ref().blue());
+}
+
+fn print_hint<S: AsRef<str>>(contents: S) {
+    println!("{}", contents.as_ref().yellow());
 }
 
 fn print_banner(mut writer: impl Write, color: bool) {

@@ -2,3 +2,6 @@
    ↑ / k                          scroll up in query history
    ↓ / j                          scroll down in query history
    tab                            cycle through path suggestions
+   ctrl+c                         clear input / exit
+   ctrl+d                         exit immediately
+   ctrl+u                         clear input from start of line to cursor
