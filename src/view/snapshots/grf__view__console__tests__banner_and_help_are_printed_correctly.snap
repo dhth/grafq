@@ -30,7 +30,9 @@ expression: result
    page                           on/off
    quit / exit / bye / :q         quit
    write                          on/off
+   @<path>                        execute query from a local file
 
  keymaps
    ↑ / k                          scroll up in query history
    ↓ / j                          scroll down in query history
+   tab                            cycle through path suggestions (after typing '@')

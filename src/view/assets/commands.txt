@@ -6,3 +6,4 @@
    page                           on/off
    quit / exit / bye / :q         quit
    write                          on/off
+   @<path>                        execute query from a local file

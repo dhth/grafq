@@ -1,3 +1,4 @@
  keymaps
    ↑ / k                          scroll up in query history
    ↓ / j                          scroll down in query history
+   tab                            cycle through path suggestions (after typing '@')
