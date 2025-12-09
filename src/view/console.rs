@@ -9,6 +9,8 @@ use colored::Colorize;
 use std::io::Write;
 use std::path::PathBuf;
 use std::str::FromStr;
+use std::time::Duration;
+use tokio::time::Instant;
 
 const BANNER: &str = include_str!("assets/logo.txt");
 const COMMANDS: &str = include_str!("assets/commands.txt");
@@ -165,7 +167,12 @@ impl<D: QueryExecutor> Console<D> {
                         }
                     };
 
-                    match self.db_client.execute_query(&query_to_execute).await {
+                    let start = Instant::now();
+
+                    let results = self.db_client.execute_query(&query_to_execute).await;
+                    print_time(Instant::now().saturating_duration_since(start));
+
+                    match results {
                         Ok(QueryResults::Empty) => {
                             println!("\nNo results\n");
                         }
@@ -247,6 +254,10 @@ impl<D: QueryExecutor> Console<D> {
 
 fn print_error<S: AsRef<str>>(contents: S) {
     println!("{}", contents.as_ref().red());
+}
+
+fn print_time(duration: Duration) {
+    println!("{}", format!("took {} ms", duration.as_millis()).cyan());
 }
 
 fn print_info<S: AsRef<str>>(contents: S) {
