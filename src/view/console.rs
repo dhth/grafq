@@ -1,4 +1,4 @@
-use super::get_results;
+use super::{QueryFilenameCompleter, get_results};
 use crate::config::DEFAULT_RESULTS_DIR;
 use crate::domain::{OutputFormat, Pager, QueryResults};
 use crate::repository::QueryExecutor;
@@ -59,7 +59,8 @@ impl<D: QueryExecutor> Console<D> {
             true,
         );
 
-        let mut editor = rustyline::DefaultEditor::new()?;
+        let mut editor = rustyline::Editor::new()?;
+        editor.set_helper(Some(QueryFilenameCompleter::default()));
         let _ = editor.load_history(&self.history_file_path);
 
         loop {
@@ -151,12 +152,20 @@ impl<D: QueryExecutor> Console<D> {
                     }
                     _ => print_error("Usage: write on/off"),
                 },
-                q => {
-                    if let Err(e) = editor.add_history_entry(q) {
+                user_input => {
+                    if let Err(e) = editor.add_history_entry(user_input) {
                         println!("Error: {e}");
                     }
 
-                    match self.db_client.execute_query(q).await {
+                    let query_to_execute = match get_query_from_user_input(user_input) {
+                        Ok(q) => q,
+                        Err(e) => {
+                            print_error(format!("Error: {:#}", e));
+                            continue;
+                        }
+                    };
+
+                    match self.db_client.execute_query(&query_to_execute).await {
                         Ok(QueryResults::Empty) => {
                             println!("\nNo results\n");
                         }
@@ -293,6 +302,22 @@ fn print_help(mut writer: impl Write, db_uri: &str, config: &ConsoleConfig, colo
     };
 
     let _ = write!(writer, "{}", help);
+}
+
+fn get_query_from_user_input(contents: &str) -> anyhow::Result<String> {
+    let query_to_execute = if let Some(file_path) = contents.strip_prefix('@').map(|p| p.trim()) {
+        let contents = std::fs::read_to_string(file_path)
+            .with_context(|| format!(r#"couldn't read file "{}""#, file_path))?;
+
+        match contents.trim() {
+            "" => anyhow::bail!("file '{}' is empty", file_path),
+            c => c.to_string(),
+        }
+    } else {
+        contents.to_string()
+    };
+
+    Ok(query_to_execute)
 }
 
 #[cfg(test)]
