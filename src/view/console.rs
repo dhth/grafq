@@ -306,6 +306,10 @@ fn print_help(mut writer: impl Write, db_uri: &str, config: &ConsoleConfig, colo
 
 fn get_query_from_user_input(contents: &str) -> anyhow::Result<String> {
     let query_to_execute = if let Some(file_path) = contents.strip_prefix('@').map(|p| p.trim()) {
+        if file_path.is_empty() {
+            anyhow::bail!("no file path provided after '@'");
+        }
+
         let contents = std::fs::read_to_string(file_path)
             .with_context(|| format!(r#"couldn't read file "{}""#, file_path))?;
 
@@ -314,7 +318,7 @@ fn get_query_from_user_input(contents: &str) -> anyhow::Result<String> {
             c => c.to_string(),
         }
     } else {
-        contents.to_string()
+        contents.trim().to_string()
     };
 
     Ok(query_to_execute)
@@ -323,7 +327,15 @@ fn get_query_from_user_input(contents: &str) -> anyhow::Result<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use insta::assert_snapshot;
+    use insta::{assert_debug_snapshot, assert_snapshot};
+
+    const QUERY_FILE_PATH: &str = "src/view/testdata/query.cypher";
+    const QUERY_WITH_WHITESPACE_FILE_PATH: &str = "src/view/testdata/query-with-whitespace.cypher";
+    const EMPTY_QUERY_FILE_PATH: &str = "src/view/testdata/empty.cypher";
+
+    //-------------//
+    //  SUCCESSES  //
+    //-------------//
 
     #[test]
     fn banner_and_help_are_printed_correctly() {
@@ -348,5 +360,124 @@ mod tests {
         // THEN
         let result = String::from_utf8(buf).expect("string should've been built");
         assert_snapshot!(result);
+    }
+
+    #[test]
+    fn get_query_from_user_input_returns_query_as_is() -> anyhow::Result<()> {
+        // GIVEN
+        let input = "MATCH (n:Node) return n.id, n.name LIMIT 5;";
+
+        // WHEN
+        let result = get_query_from_user_input(input)?;
+
+        // THEN
+        assert_eq!(result, input);
+
+        Ok(())
+    }
+
+    #[test]
+    fn get_query_from_user_input_trims_whitespace_from_query() -> anyhow::Result<()> {
+        // GIVEN
+        let input = "  MATCH (n:Node) return n.id, n.name LIMIT 5;  ";
+
+        // WHEN
+        let result = get_query_from_user_input(input)?;
+
+        // THEN
+        assert_snapshot!(result, @"MATCH (n:Node) return n.id, n.name LIMIT 5;");
+
+        Ok(())
+    }
+
+    #[test]
+    fn get_query_from_user_input_reads_query_from_file() -> anyhow::Result<()> {
+        // GIVEN
+        let input = format!("@{}", QUERY_FILE_PATH);
+
+        // WHEN
+        let result = get_query_from_user_input(&input)?;
+
+        // THEN
+        assert_snapshot!(result, @"MATCH (n:Node) return n.id, n.name LIMIT 5;");
+
+        Ok(())
+    }
+
+    #[test]
+    fn get_query_from_user_input_trims_whitespace_in_file_contents() -> anyhow::Result<()> {
+        // GIVEN
+        let input = format!("@{}", QUERY_WITH_WHITESPACE_FILE_PATH);
+
+        // WHEN
+        let result = get_query_from_user_input(&input)?;
+
+        // THEN
+        assert_snapshot!(result, @"MATCH (n:Node) return n.id, n.name LIMIT 5;");
+
+        Ok(())
+    }
+
+    #[test]
+    fn get_query_from_user_input_trims_whitespace_in_file_path() -> anyhow::Result<()> {
+        // GIVEN
+        let input = format!("@  {}  ", QUERY_FILE_PATH);
+
+        // WHEN
+        let result = get_query_from_user_input(&input)?;
+
+        // THEN
+        assert_snapshot!(result, @"MATCH (n:Node) return n.id, n.name LIMIT 5;");
+
+        Ok(())
+    }
+
+    //------------//
+    //  FAILURES  //
+    //------------//
+
+    #[test]
+    fn get_query_from_user_input_fails_if_no_file_path_provided() {
+        // GIVEN
+        let input = "@";
+
+        // WHEN
+        let result = get_query_from_user_input(input).expect_err("result should've been an error");
+
+        // THEN
+        assert_debug_snapshot!(result, @r#""no file path provided after '@'""#);
+    }
+
+    #[test]
+    fn get_query_from_user_input_fails_for_empty_file() {
+        // GIVEN
+        let input = format!("@{}", EMPTY_QUERY_FILE_PATH);
+
+        // WHEN
+        let result = get_query_from_user_input(&input).expect_err("result should've been an error");
+
+        // THEN
+        assert_debug_snapshot!(result, @r#""file 'src/view/testdata/empty.cypher' is empty""#);
+    }
+
+    #[test]
+    fn get_query_from_user_input_fails_for_nonexistent_file() {
+        // GIVEN
+        let input = "@/nonexistent/path/to/query.cypher";
+
+        // WHEN
+        let result = get_query_from_user_input(input).expect_err("result should've been an error");
+
+        // THEN
+        assert_debug_snapshot!(result, @r#"
+        Error {
+            context: "couldn\'t read file \"/nonexistent/path/to/query.cypher\"",
+            source: Os {
+                code: 2,
+                kind: NotFound,
+                message: "No such file or directory",
+            },
+        }
+        "#);
     }
 }

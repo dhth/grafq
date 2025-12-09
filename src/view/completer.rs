@@ -19,6 +19,23 @@ impl Default for QueryFilenameCompleter {
 impl Completer for QueryFilenameCompleter {
     type Candidate = Pair;
 
+    /// Complete file paths for input starting with `@`.
+    ///
+    /// Example: user types `@quer|` (cursor is `|`)
+    ///
+    /// ```text
+    /// @quer|
+    /// ^----^ line = "@quer"
+    ///  ^---^ path_segment = "quer" (line[1..5])
+    /// 012345
+    ///      ^ pos = 5
+    /// ```
+    ///
+    /// `"quer"` is passed to rustyline's built-in FilenameCompleter, which returns
+    /// `(0, vec!["queries/"])`. 1 is added to the start index to accomodate for the '@'.
+    ///
+    /// Returning `(1, vec!["queries/"])` tells rustyline to replace from position 1,
+    /// resulting in `@queries/`.
     fn complete(
         &self,
         line: &str,
@@ -29,7 +46,7 @@ impl Completer for QueryFilenameCompleter {
             return Ok((pos, vec![]));
         }
 
-        // Only complete when cursor is at the end
+        // Only complete when cursor is at the end of the line
         if pos < line.len() {
             return Ok((pos, vec![]));
         }
