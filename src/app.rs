@@ -1,46 +1,9 @@
 use crate::cli::{Args, GraphQCommand};
-use crate::cmds::{
-    ConsoleCmdError, QueryBehaviour, QueryCmdError, handle_console_cmd, handle_query_cmd,
-};
+use crate::cmds::{QueryBehaviour, handle_console_cmd, handle_query_cmd};
+use crate::error::AppError;
 use crate::view::ConsoleConfig;
 use clap::Parser;
-use etcetera::{BaseStrategy, HomeDirError};
-
-#[derive(Debug, thiserror::Error)]
-pub enum AppError {
-    #[error("couldn't determine your home directory: {0}")]
-    XdgError(#[from] HomeDirError),
-    #[error("{0}")]
-    InvalidCLIUsage(&'static str),
-    #[error(transparent)]
-    ConsoleCmdError(#[from] ConsoleCmdError),
-    #[error(transparent)]
-    QueryCmdError(#[from] QueryCmdError),
-    #[error(transparent)]
-    Uncategorised(#[from] anyhow::Error),
-}
-
-impl AppError {
-    pub fn follow_up(&self) -> Option<String> {
-        match self {
-            AppError::XdgError(_) => None,
-            AppError::InvalidCLIUsage(_) => None,
-            AppError::ConsoleCmdError(_) => None,
-            AppError::QueryCmdError(_) => None,
-            AppError::Uncategorised(_) => None,
-        }
-    }
-
-    pub fn is_unexpected(&self) -> bool {
-        match self {
-            AppError::XdgError(_) => true,
-            AppError::InvalidCLIUsage(_) => false,
-            AppError::ConsoleCmdError(_) => false,
-            AppError::QueryCmdError(_) => false,
-            AppError::Uncategorised(_) => false,
-        }
-    }
-}
+use etcetera::BaseStrategy;
 
 pub async fn run() -> Result<(), AppError> {
     let xdg = etcetera::choose_base_strategy()?;

@@ -1,7 +1,7 @@
 use super::NeptuneClient;
 use super::{Neo4jClient, Neo4jConfig};
 use crate::domain::QueryResults;
-use crate::utils::{EnvVarError, get_env_var, get_mandatory_env_var};
+use crate::utils::{EnvVarError, get_env_var};
 use anyhow::Context;
 use aws_config::BehaviorVersion;
 use aws_sdk_neptunedata::config::ProvideCredentials;
@@ -32,27 +32,28 @@ impl QueryExecutor for DbClient {
     }
 }
 
-#[allow(unused)]
 #[derive(Debug, thiserror::Error)]
 pub enum DbClientError {
     #[error(transparent)]
-    CouldntReadEnvVar(EnvVarError),
+    CouldntReadEnvVar(#[from] EnvVarError),
     #[error("DB_URI is not set")]
     DBUriNotSet,
     #[error(r#"DB_URI has an unsupported protocol: "{0}""#)]
     DBUriHasUnsupportedProtocol(String),
     #[error(r#"DB_URI is invalid: "{0}""#)]
     DBUriIsInvalid(String),
+    #[error(r#"environment variable "{0}" is missing"#)]
+    Neo4jConnectionInfoMissing(String),
     #[error(transparent)]
     Uncategorized(#[from] anyhow::Error),
 }
 
 pub async fn get_db_client() -> Result<DbClient, DbClientError> {
-    let db_uri = match get_env_var("DB_URI") {
-        Ok(Some(u)) => Ok(u),
-        Ok(None) => Err(DbClientError::DBUriNotSet),
-        Err(e) => Err(DbClientError::CouldntReadEnvVar(e)),
-    }?;
+    let db_uri = get_env_var("DB_URI")?.ok_or(DbClientError::DBUriNotSet)?;
+
+    fn get_neo4j_env_var(key: &str) -> Result<String, DbClientError> {
+        get_env_var(key)?.ok_or_else(|| DbClientError::Neo4jConnectionInfoMissing(key.to_string()))
+    }
 
     let db_client = match db_uri.split_once("://") {
         Some(("http", _)) | Some(("https", _)) => {
@@ -68,9 +69,9 @@ pub async fn get_db_client() -> Result<DbClient, DbClientError> {
             Ok(DbClient::Neptune(neptune_client))
         }
         Some(("bolt", _)) => {
-            let user = get_mandatory_env_var("NEO4J_USER")?;
-            let password = get_mandatory_env_var("NEO4J_PASSWORD")?;
-            let database_name = get_mandatory_env_var("NEO4J_DB")?;
+            let user = get_neo4j_env_var("NEO4J_USER")?;
+            let password = get_neo4j_env_var("NEO4J_PASSWORD")?;
+            let database_name = get_neo4j_env_var("NEO4J_DB")?;
 
             let config = Neo4jConfig {
                 db_uri,

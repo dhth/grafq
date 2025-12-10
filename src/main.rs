@@ -3,6 +3,7 @@ mod cli;
 mod cmds;
 mod config;
 mod domain;
+mod error;
 mod logging;
 mod repository;
 mod service;
@@ -15,7 +16,7 @@ async fn main() {
         eprintln!("Error: {:#}", e);
 
         if let Some(follow_up) = e.follow_up() {
-            eprintln!("{follow_up}");
+            eprintln!("\n{follow_up}");
         }
 
         if e.is_unexpected() {

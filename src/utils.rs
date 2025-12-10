@@ -1,5 +1,4 @@
 use crate::domain::Pager;
-use anyhow::Context;
 
 pub fn get_pager() -> anyhow::Result<Pager> {
     let pager_env_var = get_env_var("GRF_PAGER")?;
@@ -9,10 +8,6 @@ pub fn get_pager() -> anyhow::Result<Pager> {
     };
 
     Ok(pager)
-}
-
-pub fn get_mandatory_env_var(key: &str) -> anyhow::Result<String> {
-    get_env_var(key)?.context(format!("{} is not set", key))
 }
 
 #[derive(Debug, thiserror::Error)]
