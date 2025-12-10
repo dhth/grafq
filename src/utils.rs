@@ -1,5 +1,3 @@
-use anyhow::Context;
-
 use crate::domain::Pager;
 
 pub fn get_pager() -> anyhow::Result<Pager> {
@@ -12,16 +10,18 @@ pub fn get_pager() -> anyhow::Result<Pager> {
     Ok(pager)
 }
 
-pub fn get_mandatory_env_var(key: &str) -> anyhow::Result<String> {
-    get_env_var(key)?.context(format!("{} is not set", key))
+#[derive(Debug, thiserror::Error)]
+pub enum EnvVarError {
+    #[error(r#"environment variable "{0}" is not valid unicode"#)]
+    EnvVarIsInvalid(String),
 }
 
-pub fn get_env_var(key: &str) -> anyhow::Result<Option<String>> {
+pub fn get_env_var(key: &str) -> Result<Option<String>, EnvVarError> {
     match std::env::var(key) {
         Ok(v) => Ok(Some(v)),
         Err(e) => match e {
             std::env::VarError::NotPresent => Ok(None),
-            std::env::VarError::NotUnicode(_) => anyhow::bail!("{} is not valid unicode", key),
+            std::env::VarError::NotUnicode(_) => Err(EnvVarError::EnvVarIsInvalid(key.to_string())),
         },
     }
 }

@@ -22,12 +22,12 @@ pub struct ConsoleConfig {
     pub page_results: bool,
     pub write_results: bool,
     pub results_directory: PathBuf,
+    pub history_file_path: PathBuf,
     pub results_format: OutputFormat,
 }
 
 pub struct Console<D: QueryExecutor> {
     db_client: D,
-    history_file_path: PathBuf,
     config: ConsoleConfig,
     pager: Option<Pager>,
     last_ctrl_c: Option<Instant>,
@@ -41,15 +41,9 @@ enum ConsoleColor {
 }
 
 impl<D: QueryExecutor> Console<D> {
-    pub fn new(
-        db_client: D,
-        history_file_path: PathBuf,
-        config: ConsoleConfig,
-        pager: Option<Pager>,
-    ) -> Self {
+    pub fn new(db_client: D, config: ConsoleConfig, pager: Option<Pager>) -> Self {
         Self {
             db_client,
-            history_file_path,
             config,
             pager,
             last_ctrl_c: None,
@@ -67,7 +61,7 @@ impl<D: QueryExecutor> Console<D> {
 
         let mut editor = rustyline::Editor::new()?;
         editor.set_helper(Some(QueryFilenameCompleter::default()));
-        let _ = editor.load_history(&self.history_file_path);
+        let _ = editor.load_history(&self.config.history_file_path);
 
         loop {
             let user_input = match editor.readline(">> ") {
@@ -277,7 +271,7 @@ impl<D: QueryExecutor> Console<D> {
             }
         }
 
-        let _ = editor.save_history(&self.history_file_path);
+        let _ = editor.save_history(&self.config.history_file_path);
 
         Ok(())
     }
@@ -392,6 +386,7 @@ mod tests {
             results_format: OutputFormat::Csv,
             results_directory: PathBuf::new().join(DEFAULT_RESULTS_DIR),
             write_results: false,
+            history_file_path: PathBuf::new(),
         };
 
         // WHEN
