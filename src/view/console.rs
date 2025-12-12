@@ -160,7 +160,7 @@ impl<D: QueryExecutor> Console<D> {
                             print_error(format!("Error: invalid path provided: {}", e));
                         }
                     },
-                    None => print_error("Usage: output <PATH>"),
+                    None => print_error("Usage: dir <PATH>"),
                 },
                 cmd if cmd.starts_with("write") => match cmd.split_once(" ") {
                     Some((_, "on")) => {
