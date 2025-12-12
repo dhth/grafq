@@ -1,4 +1,39 @@
 use serde_json::Value;
+use std::str::FromStr;
+
+#[derive(Debug, Clone, clap::ValueEnum)]
+pub enum ResultsFormat {
+    Csv,
+    Json,
+}
+
+impl ResultsFormat {
+    pub fn extension(&self) -> &'static str {
+        match self {
+            ResultsFormat::Csv => "csv",
+            ResultsFormat::Json => "json",
+        }
+    }
+}
+
+impl FromStr for ResultsFormat {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let trimmed = s.trim();
+        match trimmed {
+            "csv" => Ok(Self::Csv),
+            "json" => Ok(Self::Json),
+            _ => Err("invalid format provided; allowed values: [csv, json]"),
+        }
+    }
+}
+
+impl std::fmt::Display for ResultsFormat {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.extension())
+    }
+}
 
 pub struct NonEmptyResults(Vec<Value>);
 

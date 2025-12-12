@@ -1,6 +1,6 @@
 use super::{QueryFilenameCompleter, get_results};
 use crate::config::DEFAULT_RESULTS_DIR;
-use crate::domain::{OutputFormat, Pager, QueryResults};
+use crate::domain::{Pager, QueryResults, ResultsFormat};
 use crate::repository::QueryExecutor;
 use crate::service::{page_results, write_results};
 use anyhow::Context;
@@ -23,7 +23,7 @@ pub struct ConsoleConfig {
     pub write_results: bool,
     pub results_directory: PathBuf,
     pub history_file_path: PathBuf,
-    pub results_format: OutputFormat,
+    pub results_format: ResultsFormat,
 }
 
 pub struct Console<D: QueryExecutor> {
@@ -130,10 +130,10 @@ impl<D: QueryExecutor> Console<D> {
                     _ => print_error("Usage: page on/off"),
                 },
                 cmd if cmd.starts_with("format") => match cmd.split_once(" ") {
-                    Some((_, arg)) => match OutputFormat::from_str(arg) {
+                    Some((_, arg)) => match ResultsFormat::from_str(arg) {
                         Ok(f) => {
                             self.config.results_format = f;
-                            print_info(format!("output format set to: {}", arg));
+                            print_info(format!("results format set to: {}", arg));
                         }
                         Err(e) => {
                             print_error(e);
@@ -143,18 +143,18 @@ impl<D: QueryExecutor> Console<D> {
                         print_error("Usage: format <csv/json>");
                     }
                 },
-                cmd if cmd.starts_with("output") => match cmd.split_once(" ") {
+                cmd if cmd.starts_with("dir") => match cmd.split_once(" ") {
                     Some((_, "reset")) => {
                         self.config.results_directory = PathBuf::new().join(DEFAULT_RESULTS_DIR);
                         print_info(format!(
-                            "output path changed to grafq's default: {}",
+                            "results directory changed to grafq's default: {}",
                             DEFAULT_RESULTS_DIR
                         ));
                     }
                     Some((_, arg)) => match PathBuf::from_str(arg) {
                         Ok(p) => {
                             self.config.results_directory = p;
-                            print_info(format!("output path changed to: {}", arg));
+                            print_info(format!("results directory changed to: {}", arg));
                         }
                         Err(e) => {
                             print_error(format!("Error: invalid path provided: {}", e));
@@ -304,10 +304,10 @@ fn print_banner(mut writer: impl Write, color: bool) {
 fn print_help(mut writer: impl Write, db_uri: &str, config: &ConsoleConfig, color: bool) {
     let config_help = format!(
         " config
-   page results                   {}
-   write results to filesystem    {}
-   output format                  {}
-   output path                    {}",
+   page results                            {}
+   write results to filesystem             {}
+   results format                          {}
+   results directory                       {}",
         if config.page_results { "ON" } else { "OFF" },
         if config.write_results { "ON" } else { "OFF" },
         config.results_format,
@@ -383,7 +383,7 @@ mod tests {
         let mut buf = Vec::new();
         let console_config = ConsoleConfig {
             page_results: false,
-            results_format: OutputFormat::Csv,
+            results_format: ResultsFormat::Csv,
             results_directory: PathBuf::new().join(DEFAULT_RESULTS_DIR),
             write_results: false,
             history_file_path: PathBuf::new(),

@@ -1,4 +1,4 @@
-use crate::domain::{BenchmarkNumRuns, OutputFormat, QueryResults};
+use crate::domain::{BenchmarkNumRuns, QueryResults, ResultsFormat};
 use crate::repository::{DbClient, DbClientError, QueryExecutor, get_db_client};
 use crate::utils::get_pager;
 use crate::view::get_results;
@@ -18,7 +18,7 @@ pub enum QueryBehaviour {
         page_results: bool,
         write_results: bool,
         results_directory: PathBuf,
-        results_format: OutputFormat,
+        results_format: ResultsFormat,
     },
 }
 

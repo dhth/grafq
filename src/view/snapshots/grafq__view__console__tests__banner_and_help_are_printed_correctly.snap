@@ -17,25 +17,25 @@ expression: result
  connected to: https://db.cluster-cf0abc1xyzjk.us-east-1.neptune.amazonaws.com:8182
 
  config
-   page results                   OFF
-   write results to filesystem    OFF
-   output format                  csv
-   output path                    .grafq
+   page results                            OFF
+   write results to filesystem             OFF
+   results format                          csv
+   results directory                       .grafq
 
  commands
-   clear                          clear screen
-   format                         csv/json
-   help / :h                      show help
-   output                         <PATH> / reset
-   page                           on/off
-   quit / exit / bye / :q         quit
-   write                          on/off
-   @<path>                        execute query from a local file
+   clear                                   clear screen
+   format              <csv/json>          specify results format
+   help/:h                                 show help
+   dir                 <PATH/reset>        specify directory to save results in
+   page                <on/off>            enable/disable displaying results via pager
+   quit/exit/bye/:q                        quit
+   write               <on/off>            enable/disable writing results to local filesystem
+   @<path>                                 execute query from a local file
 
  keymaps
-   ↑ / k                          scroll up in query history
-   ↓ / j                          scroll down in query history
-   tab                            cycle through path suggestions
-   ctrl+c                         clear input / exit
-   ctrl+d                         exit immediately
-   ctrl+u                         clear input from start of line to cursor
+   ↑ / k                                   scroll up in query history
+   ↓ / j                                   scroll down in query history
+   tab                                     cycle through path suggestions
+   ctrl+c                                  clear input / exit
+   ctrl+d                                  exit immediately
+   ctrl+u                                  clear input from start of line to cursor

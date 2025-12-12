@@ -1,5 +1,5 @@
 use crate::config::DEFAULT_RESULTS_DIR;
-use crate::domain::{BenchmarkNumRuns, OutputFormat};
+use crate::domain::{BenchmarkNumRuns, ResultsFormat};
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
@@ -39,7 +39,7 @@ pub enum GraphQCommand {
             value_name = "FORMAT",
             default_value = "json"
         )]
-        results_format: OutputFormat,
+        results_format: ResultsFormat,
     },
     /// Execute a one-off query
     #[command()]
@@ -90,7 +90,7 @@ pub enum GraphQCommand {
             value_name = "FORMAT",
             default_value = "json"
         )]
-        results_format: OutputFormat,
+        results_format: ResultsFormat,
     },
 }
 

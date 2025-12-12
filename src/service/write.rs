@@ -1,4 +1,4 @@
-use crate::domain::{NonEmptyResults, OutputFormat};
+use crate::domain::{NonEmptyResults, ResultsFormat};
 use anyhow::Context;
 use chrono::{DateTime, Utc};
 use serde_json::Value;
@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 pub fn write_results<P>(
     results: &NonEmptyResults,
     results_directory: P,
-    format: &OutputFormat,
+    format: &ResultsFormat,
     reference_time: DateTime<Utc>,
 ) -> anyhow::Result<PathBuf>
 where
@@ -36,8 +36,8 @@ where
     })?;
 
     match format {
-        OutputFormat::Csv => write_csv(results, file)?,
-        OutputFormat::Json => write_json(results, file)?,
+        ResultsFormat::Csv => write_csv(results, file)?,
+        ResultsFormat::Json => write_json(results, file)?,
     }
 
     Ok(results_file_path)
