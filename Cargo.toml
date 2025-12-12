@@ -50,3 +50,11 @@ insta-cmd = "0.6.0"
 [lints.clippy]
 unwrap_used = "deny"
 expect_used = "deny"
+
+[profile.release]
+codegen-units = 1
+lto = "fat"
+strip = "symbols"
+
+[profile.dist]
+inherits = "release"
