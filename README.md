@@ -149,7 +149,7 @@ For AWS Neptune databases, use the `https` scheme. Neptune uses IAM
 authentication, so ensure your AWS credentials are configured (via [environment
 variables](https://docs.aws.amazon.com/sdkref/latest/guide/environment-variables.html)
 or the [AWS shared config
-file](https://docs.aws.amazon.com/sdkref/latest/guide/file-format.html):
+file](https://docs.aws.amazon.com/sdkref/latest/guide/file-format.html)):
 
 ```bash
 export DB_URI="https://abc.xyz.us-east-1.neptune.amazonaws.com:8182"
