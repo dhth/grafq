@@ -17,10 +17,10 @@ It is a Rust port of [graphc].
 🤔 Motivation
 ---
 
-I wrote `grafq` for myself because I wanted a quick and easy way to poke at the
-graph databases we use at work while staying in the command line. I use it to
-try out Cypher queries, page through the output, save results to my local
-filesystem, and benchmark how they perform.
+I wrote `grafq` to make it easier to interact with the graph databases we use at
+work from the command line. I use it to quickly experiment with queries and, at
+times, benchmark them. It also lets me page through results or persist them to
+the local filesystem.
 
 💾 Installation
 ---
@@ -34,22 +34,7 @@ cargo install --git https://github.com/dhth/grafq
 
 `grafq` operates in two modes: "console" and "query".
 
-```text
-Usage: grafq [OPTIONS] <COMMAND>
-
-Commands:
-  console  Open grafq's console
-  query    Execute a one-off query
-  help     Print this message or the help of the given subcommand(s)
-
-Options:
-      --debug  Output debug information without doing anything
-  -h, --help   Print help
-```
-
-### Basic examples
-
-```text
+```bash
 # open console mode with "page results" feature turned ON
 grafq console -p
 
@@ -96,16 +81,16 @@ Options:
 
 ### Console Commands
 
-| Command                        | Description                     |
-|--------------------------------|---------------------------------|
-| `clear`                        | clear screen                    |
-| `format`                       | csv/json                        |
-| `help` / `:h`                  | show help                       |
-| `output`                       | <PATH> / reset                  |
-| `page`                         | on/off                          |
-| `quit` / `exit` / `bye` / `:q` | quit                            |
-| `write`                        | on/off                          |
-| `@<path>`                      | execute query from a local file |
+| Command                        | Args               | Description                                        |
+|--------------------------------|--------------------|----------------------------------------------------|
+| `clear`                        |                    | clear screen                                       |
+| `format`                       | `csv` / `json`     | specify results format                             |
+| `help` / `:h`                  |                    | show help                                          |
+| `dir`                          | `<PATH>` / `reset` | specify directory to save results in               |
+| `page`                         | `on` / `off`       | enable/disable displaying results via pager        |
+| `quit` / `exit` / `bye` / `:q` |                    | quit                                               |
+| `write`                        | `on` / `off`       | enable/disable writing results to local filesystem |
+| `@<path>`                      |                    | execute query from a local file                    |
 
 ### Console Keymaps
 
