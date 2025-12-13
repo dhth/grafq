@@ -1,0 +1,31 @@
+MATCH (lang:Language)-[:HAS_FEATURE]->(f:Feature {name: 'Strong Type System'})
+RETURN lang.name, lang.paradigm, lang.type;
+
+MATCH (gleam:Language {name: 'Gleam'})-[:INFLUENCED_BY]->(ancestor:Language)
+RETURN gleam.name, ancestor.name, ancestor.first_release;
+
+MATCH (lang:Language)-[suited:SUITED_FOR]->(app:Application {name: 'Web Servers'})
+RETURN lang.name, suited.popularity, lang.first_release;
+
+MATCH (rust:Language {name: 'Rust'})-[has:HAS_FEATURE]->(feature:Feature)
+RETURN feature.name, feature.category, has.support_level;
+
+MATCH (f:Feature {name: 'Concurrency Primitives'})<-[:HAS_FEATURE]-(lang:Language)
+RETURN lang.name, lang.paradigm;
+
+MATCH (lang:Language)-[suited:SUITED_FOR]->(app:Application)
+RETURN lang.name, collect({app: app.name, popularity: suited.popularity}) as applications;
+
+MATCH (lang:Language)-[suited:SUITED_FOR]->(app:Application {name: 'Real-time Applications'})
+RETURN lang.name, lang.type, suited.popularity;
+
+MATCH (lang:Language {paradigm: 'Functional'})-[:HAS_FEATURE]->(feature:Feature)
+RETURN lang.name, collect(feature.name) as features;
+
+MATCH (lang:Language)-[suited:SUITED_FOR]->(app:Application)
+WHERE suited.popularity = 'High'
+RETURN app.name, app.domain, count(lang) as language_count;
+
+MATCH (lang:Language)
+RETURN lang.name, lang.first_release, lang.type
+ORDER BY lang.first_release;

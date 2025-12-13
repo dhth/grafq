@@ -58,6 +58,23 @@ review *FLAGS:
 test:
     cargo test
 
+[working-directory: 'local/neo4j']
+neo4j-up:
+    docker compose up -d --wait
+    docker exec neo4j-local /docker-entrypoint-initdb.d/init.sh
+
+[working-directory: 'local/neo4j']
+neo4j-ps:
+    docker compose ps
+
+[working-directory: 'local/neo4j']
+neo4j-logs:
+    docker compose logs
+
+[working-directory: 'local/neo4j']
+neo4j-down:
+    docker compose down -v
+
 all:
     cargo check --all-targets
     cargo fmt --all
