@@ -8,7 +8,6 @@ use aws_sdk_neptunedata::config::ProvideCredentials;
 
 pub trait QueryExecutor {
     async fn execute_query(&self, query: &str) -> anyhow::Result<QueryResults>;
-    async fn verify_connectivity(&self) -> anyhow::Result<()>;
     fn db_uri(&self) -> String;
 }
 
@@ -25,18 +24,21 @@ impl QueryExecutor for DbClient {
         }
     }
 
-    async fn verify_connectivity(&self) -> anyhow::Result<()> {
-        self.execute_query("RETURN 1")
-            .await
-            .with_context(|| format!("couldn't verify connection to {}", self.db_uri()))?;
-        Ok(())
-    }
-
     fn db_uri(&self) -> String {
         match self {
             DbClient::Neptune(c) => c.db_uri(),
             DbClient::Neo4j(c) => c.db_uri(),
         }
+    }
+}
+
+impl DbClient {
+    pub async fn verify_connectivity(&self) -> anyhow::Result<()> {
+        self.execute_query("RETURN 1")
+            .await
+            .with_context(|| format!("couldn't verify connection to {}", self.db_uri()))?;
+
+        Ok(())
     }
 }
 

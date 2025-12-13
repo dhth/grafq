@@ -1,4 +1,4 @@
-use crate::repository::{DbClientError, QueryExecutor, get_db_client};
+use crate::repository::{DbClientError, get_db_client};
 use crate::utils::get_pager;
 use crate::view::{Console, ConsoleConfig};
 use anyhow::Context;
