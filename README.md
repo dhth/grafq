@@ -61,7 +61,7 @@ Console Mode
 You can either print the results in the console, or have them piped through a
 pager. Additionally, you can also write the results to your local filesystem.
 
-[![console mode](https://asciinema.org/a/wUnUixCU6l0OTIBh2JfGr7mT9.svg)](https://asciinema.org/a/wUnUixCU6l0OTIBh2JfGr7mT9)
+[![console mode](https://asciinema.org/a/Es0DuvbkhI6qzFr4c3fPRPpYF.svg)](https://asciinema.org/a/Es0DuvbkhI6qzFr4c3fPRPpYF)
 
 ```bash
 grafq console -h
