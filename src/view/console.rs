@@ -190,7 +190,7 @@ impl<D: QueryExecutor> Console<D> {
 
                     let results = tokio::select! {
                         res = self.db_client.execute_query(&query_to_execute) => res,
-                        _ = tokio::signal::ctrl_c() => {
+                        Ok(_) = tokio::signal::ctrl_c() => {
                             print_hint("\nquery cancelled");
                             continue;
                         }
