@@ -1,3 +1,2 @@
-*justfile linguist-vendored
-*.cypher linguist-vendored
-*.sh linguist-vendored
+* linguist-detectable=false
+*.rs linguist-detectable=true
