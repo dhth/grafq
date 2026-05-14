@@ -24,7 +24,7 @@ exclude = [
 [dependencies]
 anyhow = "1.0.100"
 aws-config = "1.8.15"
-aws-sdk-neptunedata = "1.99.1"
+aws-sdk-neptunedata = { version = "1.99.1", default-features = false }
 aws-smithy-types = "1.4.3"
 chrono = "0.4.43"
 clap = { version = "4.5.56", features = ["derive"] }
