@@ -200,10 +200,11 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-neptunedata"
-version = "1.101.0"
+version = "1.102.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9cc6a36e5afd9d495338bf666a938d38a6157926080f1ba21b9e65712c0e6777"
+checksum = "db8201f57fd875621a3c0008cbfb193252ea49d20dec0f5152a68453b9ef07cd"
 dependencies = [
+ "arc-swap",
  "aws-credential-types",
  "aws-runtime",
  "aws-smithy-async",
