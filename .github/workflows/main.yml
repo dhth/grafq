@@ -20,7 +20,7 @@ jobs:
       yml: ${{ steps.filter.outputs.yml }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
       - uses: dorny/paths-filter@v4
         id: filter
         with:
@@ -52,7 +52,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
       - name: Install toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Build
@@ -66,7 +66,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
       - name: Install toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Test
@@ -79,7 +79,7 @@ jobs:
     if: ${{ needs.changes.outputs.code == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
       - name: Install toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
@@ -95,7 +95,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
       - uses: dhth/composite-actions/.github/actions/lint-yaml@main
 
   lint-workflows:
@@ -104,7 +104,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
       - uses: dhth/composite-actions/.github/actions/lint-actions@main
 
   audit:
@@ -113,5 +113,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
       - uses: dhth/composite-actions/.github/actions/cargo-deny@main
