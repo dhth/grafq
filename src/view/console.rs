@@ -132,7 +132,7 @@ impl<D: QueryExecutor> Console<D> {
                 cmd if cmd.starts_with("format") => match cmd.split_once(" ") {
                     Some((_, arg)) => match ResultsFormat::from_str(arg) {
                         Ok(f) => {
-                            print_info(format!("results format set to: {}", &f));
+                            print_info(format!("results format set to: {}", f));
                             self.config.results_format = f;
                         }
                         Err(e) => {
