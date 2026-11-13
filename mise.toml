@@ -1,0 +1,146 @@
+min_version = "2026.11.7"
+
+[settings]
+idiomatic_version_file_enable_tools = ["rust"]
+task.run_auto_install = false
+
+[env]
+_.file = ".env"
+
+[tool_alias]
+cargo-deny = "aqua:EmbarkStudios/cargo-deny"
+
+[tools]
+actionlint = "latest"
+cargo-deny = "latest"
+cargo-dist = "0.31.0"
+cargo-insta = "1.47.2"
+yamlfmt = "latest"
+
+[tasks.all]
+alias = "a"
+description = "Check, format, lint, and test"
+run = [
+	{ task = "check" },
+	{ task = "fmt" },
+	{ task = "lint" },
+	{ task = "test" },
+]
+
+[tasks.build]
+alias = "b"
+description = "Build the application"
+run = "cargo build"
+
+[tasks.check]
+alias = "c"
+description = "Check all targets"
+run = "cargo check --all-targets"
+
+[tasks.deny]
+alias = "d"
+description = "Run cargo-deny"
+run = "cargo deny check --hide-inclusion-graph"
+
+[tasks.fmt]
+alias = "f"
+description = "Format Rust source files"
+run = "cargo fmt --all"
+
+[tasks."fmt:check"]
+alias = ["fc", "fmt-check"]
+description = "Check Rust source formatting"
+run = "cargo fmt --all -- --check"
+
+[tasks.install]
+alias = "i"
+description = "Install the application"
+run = "cargo install --path ."
+
+[tasks.lint]
+alias = "l"
+description = "Lint all targets"
+run = "cargo clippy --all-targets"
+
+[tasks."lint:fix"]
+alias = ["lf", "lint-fix"]
+description = "Apply Clippy fixes"
+run = "cargo clippy --fix --allow-dirty --allow-staged"
+
+[tasks."publish:dry"]
+alias = "publish-dry"
+description = "Validate the crate package without publishing"
+run = "cargo publish --dry-run --allow-dirty"
+
+[tasks.review]
+alias = "re"
+description = "Run tests and review snapshot changes"
+raw_args = true
+interactive = true
+run = "cargo insta test --review"
+
+[tasks.run]
+alias = "r"
+description = "Run the console command"
+raw_args = true
+run = "cargo run -- console"
+
+[tasks.query]
+description = "Run the query command"
+raw_args = true
+run = "cargo run -- query"
+
+[tasks.test]
+alias = "t"
+description = "Run all tests"
+raw_args = true
+run = "cargo test"
+
+[tasks."lint:actions"]
+description = "Lint GitHub Actions workflows"
+run = "actionlint"
+
+[tasks."lint:yaml"]
+description = "Lint YAML files"
+run = '''
+yamlfmt \
+	-lint \
+	-quiet \
+	-formatter 'retain_line_breaks_single=true' \
+	$(git ls-files '*.yml' '*.yaml')
+'''
+
+[tasks."dist:check"]
+description = "Check generated cargo-dist configuration"
+run = "dist generate --check"
+
+[tasks."dist:generate"]
+description = "Regenerate cargo-dist configuration"
+run = "dist generate"
+
+[tasks."neo4j:up"]
+alias = "neo4j-up"
+description = "Start the local Neo4j instance and load sample data"
+dir = "{{config_root}}/local/neo4j"
+run = [
+	"docker compose up -d --wait",
+	"docker exec neo4j-local /docker-entrypoint-initdb.d/init.sh",
+]
+
+[tasks."neo4j:ps"]
+alias = "neo4j-ps"
+description = "Show the local Neo4j container status"
+dir = "{{config_root}}/local/neo4j"
+run = "docker compose ps"
+
+[tasks."neo4j:logs"]
+alias = "neo4j-logs"
+description = "Show the local Neo4j container logs"
+dir = "{{config_root}}/local/neo4j"
+run = "docker compose logs"
+
+[tasks."neo4j:down"]
+alias = "neo4j-down"
+description = "Stop the local Neo4j instance and remove its volumes"
+dir = "{{config_root}}/local/neo4j"
+run = "docker compose down -v"

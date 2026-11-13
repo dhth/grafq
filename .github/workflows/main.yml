@@ -30,13 +30,19 @@ jobs:
               - Cargo.*
               - clippy.toml
               - dist-workspace.toml
+              - mise.toml
+              - mise.lock
               - rust-toolchain.toml
               - ".github/workflows/main.yml"
             workflows:
               - ".github/**/*.yml"
+              - "mise.toml"
+              - "mise.lock"
             yml:
               - "**.yml"
               - "**.yaml"
+              - "mise.toml"
+              - "mise.lock"
 
   build:
     needs: changes
@@ -47,10 +53,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
-      - name: Install toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Set up mise
+        uses: jdx/mise-action@v4
+        with:
+          install_args: rust
       - name: Build
-        run: cargo build
+        run: mise run build
 
   test:
     needs: changes
@@ -61,12 +69,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
-      - name: Install toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Set up mise
+        uses: jdx/mise-action@v4
+        with:
+          install_args: rust
       - name: Test
         env:
           RUST_BACKTRACE: 0
-        run: cargo test
+        run: mise run test
 
   lint:
     needs: changes
@@ -74,14 +84,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Install toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Set up mise
+        uses: jdx/mise-action@v4
         with:
-          components: clippy, rustfmt
+          install_args: rust
       - name: Check formatting
-        run: cargo fmt --all -- --check
+        run: mise run fmt:check
       - name: Lint
-        run: cargo clippy
+        run: mise run lint
 
   lint-yaml:
     needs: changes
@@ -90,7 +100,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - uses: dhth/composite-actions/.github/actions/lint-yaml@main
+      - name: Set up mise
+        uses: jdx/mise-action@v4
+        with:
+          install_args: yamlfmt
+      - name: Lint YAML files
+        run: mise run lint:yaml
 
   lint-workflows:
     needs: changes
@@ -99,4 +114,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - uses: dhth/composite-actions/.github/actions/lint-actions@main
+      - name: Set up mise
+        uses: jdx/mise-action@v4
+        with:
+          install_args: actionlint
+      - name: Lint workflows
+        run: mise run lint:actions
